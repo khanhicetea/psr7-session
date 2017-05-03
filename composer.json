@@ -1,0 +1,23 @@
+{
+    "name": "khanhicetea/psr7-session",
+    "description": "PSR7 Session Middleware",
+    "minimum-stability": "stable",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "KhanhIceTea",
+            "email": "khanhicetea@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^7.0",
+        "psr/http-message": "^1.0",
+        "oscarotero/psr7-middlewares": "^3.16",
+        "symfony/http-foundation": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Psr7Session\\": "src/"
+        }
+    }
+}

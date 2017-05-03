@@ -1,0 +1,9 @@
+# COMPOSER
+vendor/
+composer.lock
+composer.phar
+
+# LOCAL TESTS
+.htaccess
+index.php
+/storage
