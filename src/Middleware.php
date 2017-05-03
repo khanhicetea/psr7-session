@@ -5,15 +5,15 @@ namespace Psr7Session;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\HttpFoundation\Session\Session;
+use Psr7Middlewares\Utils\AttributeTrait;
 use DateTime;
 use SessionHandlerInterface;
-use Psr7Middlewares\Utils;
-use Utils\AttributeTrait;
+use InvalidArgumentException;
 
 
 class Middleware
 {
-    use Utils\AttributeTrait;
+    use AttributeTrait;
 
     const KEY = 'SESSION';
 
@@ -25,7 +25,6 @@ class Middleware
     private $maxAge = 0;
     private $expires = null;
     private $sessionHandler = null;
-    private $sessionStorage = null;
 
     public static function create() {
         return new static();
@@ -75,9 +74,9 @@ class Middleware
         return $this;
     }
 
-    private function getHeaderValue() {
+    private function getHeaderValue(string $id) {
         $values = [
-            sprintf('%s=%s', $this->name, $this->sessionStorage->getId())
+            sprintf('%s=%s', $this->name, $id)
         ];
 
         if ($this->domain) {
@@ -107,28 +106,28 @@ class Middleware
 
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
-        if (!$this->sessionHandler instanceof \SessionHandlerInterface) {
-            throw new \InvalidArgumentException('Session handler required');
+        if (!$this->sessionHandler instanceof SessionHandlerInterface) {
+            throw new InvalidArgumentException('Session handler required');
         }
 
         $session_cookie_name = $this->name;
         $cookies = $request->getCookieParams();
         $session_id = $cookies[$session_cookie_name] ?? null;
 
-        $this->sessionStorage = new SessionStorage(
+        $sessionStorage = new SessionStorage(
             $this->sessionHandler,
             $session_id,
             $session_cookie_name
         );
-        $session = new Session($this->sessionStorage);
+        $session = new Session($sessionStorage);
         $request = self::setAttribute($request, self::KEY, $session);
         
         $response = $next($request, $response);
 
         $session->save();
 
-        if (is_null($session_id)|| $this->sessionStorage->isRegenerated()) {
-            return $response->withAddedHeader('Set-Cookie', $this->getHeaderValue());
+        if (is_null($session_id)|| $sessionStorage->isRegenerated()) {
+            return $response->withAddedHeader('Set-Cookie', $this->getHeaderValue($sessionStorage->getId()));
         }
 
         return $response;
